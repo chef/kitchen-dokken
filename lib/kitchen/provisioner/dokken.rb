@@ -59,7 +59,7 @@ module Kitchen
         create_sandbox
         write_run_command(run_command)
         instance.transport.connection(state) do |conn|
-          if remote_docker_host?
+          if remote_docker_host? || running_inside_docker?
             info("Transferring files to #{instance.to_str}")
             conn.upload(sandbox_dirs, config[:root_path])
           end
@@ -75,9 +75,7 @@ module Kitchen
       rescue Kitchen::Transport::TransportFailed => ex
         raise ActionFailed, ex.message
       ensure
-        return unless config[:clean_dokken_sandbox] # rubocop: disable Lint/EnsureReturn
-
-        cleanup_dokken_sandbox
+        cleanup_dokken_sandbox if config[:clean_dokken_sandbox] # rubocop: disable Lint/EnsureReturn
       end
 
       def validate_config

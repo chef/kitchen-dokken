@@ -72,6 +72,7 @@ module Kitchen
       default_config :userns_host, false
       default_config :volumes, nil
       default_config :write_timeout, 3600
+      default_config :user_ns_mode, nil
       default_config :creds_file, nil
       default_config :docker_config_creds, false
 
@@ -93,7 +94,7 @@ module Kitchen
         # data
         dokken_create_sandbox
 
-        if remote_docker_host?
+        if remote_docker_host? || running_inside_docker?
           make_data_image
           start_data_container state
         end
@@ -109,7 +110,7 @@ module Kitchen
       end
 
       def destroy(_state)
-        if remote_docker_host?
+        if remote_docker_host? || running_inside_docker?
           stop_data_container
           delete_data_container
         end
@@ -243,25 +244,11 @@ module Kitchen
       end
 
       def work_image
-        return "#{image_prefix}/#{instance_name}" unless image_prefix.nil?
-
-        instance_name
-      end
-
-      def dokken_binds
-        ret = []
-        ret << "#{dokken_kitchen_sandbox}:/opt/kitchen" unless dokken_kitchen_sandbox.nil? || remote_docker_host?
-        ret << "#{dokken_verifier_sandbox}:/opt/verifier" unless dokken_verifier_sandbox.nil? || remote_docker_host?
-        ret << Array(config[:binds]) unless config[:binds].nil?
-        ret.flatten
+        [image_prefix, instance_name].compact.join("/").downcase
       end
 
       def dokken_tmpfs
         coerce_tmpfs(config[:tmpfs])
-      end
-
-      def dokken_volumes
-        coerce_volumes(config[:volumes])
       end
 
       def coerce_tmpfs(v)
@@ -276,7 +263,14 @@ module Kitchen
         end
       end
 
-      def coerce_volumes(v)
+      def dokken_volumes_from
+        ret = []
+        ret << chef_container_name
+        ret << data_container_name if remote_docker_host? || running_inside_docker?
+        ret
+      end
+
+      def coerce_volumes(v, binds)
         case v
         when PartialHash, nil
           v
@@ -284,28 +278,37 @@ module Kitchen
           PartialHash[v]
         else
           b = []
-          v = Array(v).to_a # in case v.is_A?(Chef::Node::ImmutableArray)
           v.delete_if do |x|
             parts = x.split(":")
             b << x if parts.length > 1
           end
           b = nil if b.empty?
-          config[:binds].push(b) unless config[:binds].include?(b) || b.nil?
+          binds.push(b) unless binds.include?(b) || b.nil?
           return PartialHash.new if v.empty?
 
           v.each_with_object(PartialHash.new) { |volume, h| h[volume] = {} }
         end
       end
 
-      def dokken_volumes_from
-        ret = []
-        ret << chef_container_name
-        ret << data_container_name if remote_docker_host?
-        ret
+      def calc_volumes_binds
+        volumes = Array.new(Array(config[:volumes]))
+        binds = Array.new(Array(config[:binds]))
+
+        # Binds is mutated in-place, volumes *may* be.
+        volumes = coerce_volumes(volumes, binds)
+
+        binds_ret = []
+        binds_ret << "#{dokken_kitchen_sandbox}:/opt/kitchen" unless dokken_kitchen_sandbox.nil? || remote_docker_host? || running_inside_docker?
+        binds_ret << "#{dokken_verifier_sandbox}:/opt/verifier" unless dokken_verifier_sandbox.nil? || remote_docker_host? || running_inside_docker?
+        binds_ret << binds unless binds.nil?
+
+        [volumes, binds_ret.flatten]
       end
 
       def start_runner_container(state)
         debug "driver - starting #{runner_container_name}"
+
+        volumes, binds = calc_volumes_binds
 
         config = {
           "name" => runner_container_name,
@@ -315,11 +318,11 @@ module Kitchen
           "Hostname" => self[:hostname],
           "Env" => self[:env],
           "ExposedPorts" => exposed_ports,
-          "Volumes" => dokken_volumes,
+          "Volumes" => volumes,
           "HostConfig" => {
             "Privileged" => self[:privileged],
             "VolumesFrom" => dokken_volumes_from,
-            "Binds" => dokken_binds,
+            "Binds" => binds,
             "Dns" => self[:dns],
             "DnsSearch" => self[:dns_search],
             "Links" => Array(self[:links]),
@@ -331,14 +334,16 @@ module Kitchen
             "Tmpfs" => dokken_tmpfs,
             "Memory" => self[:memory_limit],
           },
-          "NetworkingConfig" => {
+        }
+        unless %w{host bridge}.include?(self[:network_mode])
+          config["NetworkingConfig"] = {
             "EndpointsConfig" => {
               self[:network_mode] => {
                 "Aliases" => Array(self[:hostname]).concat(Array(self[:hostname_aliases])),
               },
             },
-          },
-        }
+          }
+        end
         unless self[:entrypoint].to_s.empty?
           config["Entrypoint"] = self[:entrypoint]
         end
@@ -348,6 +353,15 @@ module Kitchen
         if self[:userns_host]
           config["HostConfig"]["UsernsMode"] = "host"
         end
+
+        if self[:privileged]
+          if self[:user_ns_mode] != "host"
+            debug "driver - privileged mode is not supported with user namespaces enabled"
+            debug "driver - changing UsernsMode from '#{self[:user_ns_mode]}' to 'host'"
+          end
+          config["HostConfig"]["UsernsMode"] = "host"
+        end
+
         runner_container = run_container(config)
         state[:runner_container] = runner_container.json
       end
@@ -363,19 +377,23 @@ module Kitchen
             "PublishAllPorts" => true,
             "NetworkMode" => "bridge",
           },
-          "NetworkingConfig" => {
+        }
+        unless %w{host bridge}.include?(self[:network_mode])
+          config["NetworkingConfig"] = {
             "EndpointsConfig" => {
               self[:network_mode] => {
                 "Aliases" => Array(self[:hostname]),
               },
             },
-          },
-        }
+          }
+        end
         data_container = run_container(config)
         state[:data_container] = data_container.json
       end
 
       def make_dokken_network
+        return unless self[:network_mode] == "dokken"
+
         lockfile = Lockfile.new "#{home_dir}/.dokken-network.lock"
         begin
           lockfile.lock
@@ -452,11 +470,23 @@ module Kitchen
         @docker_config_creds = {}
         config_file = ::File.join(::Dir.home, ".docker", "config.json")
         if ::File.exist?(config_file)
-          JSON.load_file!(config_file)["auths"].each do |k, v|
-            next if v["auth"].nil?
+          config = JSON.load_file!(config_file)
+          if config["auths"]
+            config["auths"].each do |k, v|
+              next if v["auth"].nil?
 
-            username, password = Base64.decode64(v["auth"]).split(":")
-            @docker_config_creds[k] = { serveraddress: k, username: username, password: password }
+              username, password = Base64.decode64(v["auth"]).split(":")
+              @docker_config_creds[k] = { serveraddress: k, username: username, password: password }
+            end
+          end
+
+          if config["credHelpers"]
+            config["credHelpers"].each do |k, v|
+              @docker_config_creds[k] = Proc.new do
+                c = JSON.parse(`echo #{k} | docker-credential-#{v} get`)
+                { serveraddress: c["ServerURL"], username: c["Username"], password: c["Secret"] }
+              end
+            end
           end
         else
           debug("~/.docker/config.json does not exist")
@@ -473,7 +503,8 @@ module Kitchen
         # NOTE: Try to use DockerHub auth if exact registry match isn't found
         default_registry = "https://index.docker.io/v1/"
         if docker_config_creds.key?(image_registry)
-          docker_config_creds[image_registry]
+          c = docker_config_creds[image_registry]
+          c.respond_to?(:call) ? c.call : c
         elsif docker_config_creds.key?(default_registry)
           docker_config_creds[default_registry]
         end

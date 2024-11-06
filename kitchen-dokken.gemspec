@@ -12,12 +12,11 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/test-kitchen/kitchen-dokken"
   spec.license       = "Apache-2.0"
 
-  spec.files         = `git ls-files`.split($INPUT_RECORD_SEPARATOR).grep(/LICENSE|^lib/)
+  spec.files         = %w{LICENSE kitchen-dokken.gemspec Gemfile Rakefile} + Dir.glob("lib/**/*")
   spec.require_paths = ["lib"]
 
   spec.required_ruby_version = ">= 2.7"
 
   spec.add_dependency "docker-api", ">= 1.33", "< 3"
   spec.add_dependency "lockfile", "~> 2.1"
-  spec.add_dependency "test-kitchen", ">= 1.15", "< 4"
 end

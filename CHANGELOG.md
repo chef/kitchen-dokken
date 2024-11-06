@@ -1,5 +1,61 @@
 # Dokken Changelog
 
+## [2.20.6](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.5...v2.20.6) (2024-07-01)
+
+
+### Bug Fixes
+
+* Switch to using AlmaLinux 9 for the data container ([#329](https://github.com/test-kitchen/kitchen-dokken/issues/329)) ([955040e](https://github.com/test-kitchen/kitchen-dokken/commit/955040efdbe2c2e6e01797f59fb657313aceb86f))
+
+## [2.20.5](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.4...v2.20.5) (2024-06-19)
+
+
+### Bug Fixes
+
+* update release please configs ([#326](https://github.com/test-kitchen/kitchen-dokken/issues/326)) ([a407bcc](https://github.com/test-kitchen/kitchen-dokken/commit/a407bccf7c45beb0d8effb4a13ce1d0ccb50f866))
+
+## [2.20.4](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.3...v2.20.4) (2024-04-02)
+
+
+### Miscellaneous Chores
+
+* release 2.20.4 ([#320](https://github.com/test-kitchen/kitchen-dokken/issues/320)) ([054f2cf](https://github.com/test-kitchen/kitchen-dokken/commit/054f2cf175f515707535f5e6446327d7563b4244))
+
+## [2.20.3](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.2...v2.20.3) (2023-11-28)
+
+
+### Bug Fixes
+
+* Published package name ([#313](https://github.com/test-kitchen/kitchen-dokken/issues/313)) ([57a7498](https://github.com/test-kitchen/kitchen-dokken/commit/57a74987f3c093073b09e49b05258a4b7ea0595f))
+
+## [2.20.2](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.1...v2.20.2) (2023-11-27)
+
+
+### Bug Fixes
+
+* Update renovate config ([#310](https://github.com/test-kitchen/kitchen-dokken/issues/310)) ([db1e793](https://github.com/test-kitchen/kitchen-dokken/commit/db1e79311e477880c60fd2c83a121a8610d4e2d0))
+
+## [2.20.1](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.0...v2.20.1) (2023-11-25)
+
+
+### Bug Fixes
+
+* Avoid mutating config to fix concurrent execution ([#279](https://github.com/test-kitchen/kitchen-dokken/issues/279)) ([116ed4a](https://github.com/test-kitchen/kitchen-dokken/commit/116ed4a64fd292523a278636ce92b430ae7560f3))
+* do not set network aliases for host or bridge networks ([#295](https://github.com/test-kitchen/kitchen-dokken/issues/295)) ([02e6f23](https://github.com/test-kitchen/kitchen-dokken/commit/02e6f235de4cc43cfd9dbe9ddede0c5b6684804f))
+
+## [2.20.0](https://github.com/test-kitchen/kitchen-dokken/compare/v2.19.1...v2.20.0) (2023-11-25)
+
+
+### Features
+
+* add support for running dokken in a container ([#281](https://github.com/test-kitchen/kitchen-dokken/issues/281)) ([bb38aca](https://github.com/test-kitchen/kitchen-dokken/commit/bb38aca9c062bc42094d1fb89fc67f3fdb9c5ba0))
+* use Docker credential helpers to get auth ([#287](https://github.com/test-kitchen/kitchen-dokken/issues/287)) ([d1ba01e](https://github.com/test-kitchen/kitchen-dokken/commit/d1ba01e08e01fdc7d4f3c5cc06242578d6f3957e))
+
+
+### Bug Fixes
+
+* **CI:** Update workflows ([#303](https://github.com/test-kitchen/kitchen-dokken/issues/303)) ([a7b4535](https://github.com/test-kitchen/kitchen-dokken/commit/a7b4535b99829f813cd3848ab3a1842b8d6c6f8c))
+
 ## 2.19.1 (2023-02-07)
 
 - Fix login command for Podman [@jmauro](https://github.com/jmauro)
@@ -163,7 +219,7 @@
 
   ```yaml
    driver:
-     hostname: www.computers.biz
+     hostname: example.com
      ports: "1234"
   ```
 
@@ -171,7 +227,7 @@
 
   ```yaml
    driver:
-     hostname: www.computers.biz
+     hostname: example.com
      ports:
        - '1234'
        - '4321:4321/udp'
@@ -197,7 +253,7 @@
 
   ```yaml
    driver:
-     hostname: www.computers.biz
+     hostname: example.com
   ```
 
 ## 2.3.1
@@ -231,7 +287,7 @@
 - Initial support for clusters / inter-suite name resolution
 - Dokken now creates a user-defined network named "dokken" and connects containers to it. This allows us to take advantage of the built-in DNS server that in Docker 1.10 and later.
 
-  driver: hostname: www.computers.biz
+  driver: hostname: example.com
 
 ## 2.1.10
 
