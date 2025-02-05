@@ -1,5 +1,5 @@
 require "bundler/gem_tasks"
-require "chefstyle"
+require "cookstyle"
 require "rubocop/rake_task"
 
 RuboCop::RakeTask.new(:style) do |task|
