@@ -1,5 +1,6 @@
 ---
 config:
+  ul-style: false  # MD004
   line-length: false  # MD013
   no-duplicate-heading: false  # MD024
 ignores:

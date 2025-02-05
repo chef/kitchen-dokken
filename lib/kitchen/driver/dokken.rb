@@ -41,7 +41,7 @@ module Kitchen
       default_config :cgroupns_host, false
       default_config :chef_image do |driver|
         version = driver[:chef_version].split(".").first
-        if version.match? /\A\d+\z/ && version.to_i < 19
+        if version.match?(/\A\d+\z/) && version.to_i < 19
           "chef/chef"
         else
           "chef/chef-hab"
@@ -472,7 +472,7 @@ module Kitchen
               next if v["auth"].nil?
 
               username, password = Base64.decode64(v["auth"]).split(":")
-              @docker_config_creds[k] = { serveraddress: k, username: username, password: password }
+              @docker_config_creds[k] = { serveraddress: k, username:, password: }
             end
           end
 

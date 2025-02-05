@@ -2,13 +2,11 @@
 
 ## [2.20.6](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.5...v2.20.6) (2024-07-01)
 
-
 ### Bug Fixes
 
 * Switch to using AlmaLinux 9 for the data container ([#329](https://github.com/test-kitchen/kitchen-dokken/issues/329)) ([955040e](https://github.com/test-kitchen/kitchen-dokken/commit/955040efdbe2c2e6e01797f59fb657313aceb86f))
 
 ## [2.20.5](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.4...v2.20.5) (2024-06-19)
-
 
 ### Bug Fixes
 
@@ -16,13 +14,11 @@
 
 ## [2.20.4](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.3...v2.20.4) (2024-04-02)
 
-
 ### Miscellaneous Chores
 
 * release 2.20.4 ([#320](https://github.com/test-kitchen/kitchen-dokken/issues/320)) ([054f2cf](https://github.com/test-kitchen/kitchen-dokken/commit/054f2cf175f515707535f5e6446327d7563b4244))
 
 ## [2.20.3](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.2...v2.20.3) (2023-11-28)
-
 
 ### Bug Fixes
 
@@ -30,13 +26,11 @@
 
 ## [2.20.2](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.1...v2.20.2) (2023-11-27)
 
-
 ### Bug Fixes
 
 * Update renovate config ([#310](https://github.com/test-kitchen/kitchen-dokken/issues/310)) ([db1e793](https://github.com/test-kitchen/kitchen-dokken/commit/db1e79311e477880c60fd2c83a121a8610d4e2d0))
 
 ## [2.20.1](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.0...v2.20.1) (2023-11-25)
-
 
 ### Bug Fixes
 
@@ -45,12 +39,10 @@
 
 ## [2.20.0](https://github.com/test-kitchen/kitchen-dokken/compare/v2.19.1...v2.20.0) (2023-11-25)
 
-
 ### Features
 
 * add support for running dokken in a container ([#281](https://github.com/test-kitchen/kitchen-dokken/issues/281)) ([bb38aca](https://github.com/test-kitchen/kitchen-dokken/commit/bb38aca9c062bc42094d1fb89fc67f3fdb9c5ba0))
 * use Docker credential helpers to get auth ([#287](https://github.com/test-kitchen/kitchen-dokken/issues/287)) ([d1ba01e](https://github.com/test-kitchen/kitchen-dokken/commit/d1ba01e08e01fdc7d4f3c5cc06242578d6f3957e))
-
 
 ### Bug Fixes
 
