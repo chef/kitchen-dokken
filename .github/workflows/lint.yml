@@ -42,7 +42,7 @@ jobs:
         if: steps.check.outputs.gemfile == 'true'
       - name: Chef Style
         if: steps.check.outputs.gemfile == 'true'
-        run: bundle exec cookstyle
+        run: bundle exec cookstyle --chefstyle
 
   yamllint:
     runs-on: ubuntu-latest
