@@ -109,7 +109,7 @@ module Kitchen
         cmd << " -j /opt/kitchen/dna.json"
         cmd << " --profile-ruby" if config[:profile_ruby]
         cmd << " --slow-report" if config[:slow_resource_report]
-        cmd << " --chef-license-key=#{config[:chef_license_key]}" if instance.driver.installer == "habitat" && config[:chef_license_key]
+        # cmd << " --chef-license-key=#{config[:chef_license_key]}" if instance.driver.installer == "habitat" && config[:chef_license_key]
 
         chef_cmd(cmd)
       end
@@ -130,7 +130,7 @@ module Kitchen
       end
 
       def chef_executable
-        return "HAB_LICENSE='accept-no-persist' IS_KITCHEN='true' #{config[:hab_chef_binary]} pkg exec chef/chef-infra-client -- chef-client " if instance.driver.installer == "habitat"
+        return "HAB_LICENSE='accept-no-persist' #{config[:hab_chef_binary]} pkg exec chef/chef-infra-client -- chef-client " if instance.driver.installer == "habitat"
 
         "#{config[:chef_binary]}"
       end
