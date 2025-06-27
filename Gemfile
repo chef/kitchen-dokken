@@ -1,6 +1,5 @@
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in kitchen-dokken.gemspec
 gemspec
 
 gem "chef-test-kitchen-enterprise", git: "https://github.com/chef/chef-test-kitchen-enterprise", branch: "main"
@@ -13,9 +12,8 @@ end
 
 group :development do
   gem "pry"
-  gem "pry-byebug"
 end
 
-group :chefstyle do
-  gem "chefstyle", "2.2.3"
+group :linting do
+  gem "cookstyle", "7.32.8"
 end
