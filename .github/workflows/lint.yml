@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.3"]
+        ruby: ["3.4"]
     name: Chefstyle on Ruby
     steps:
       - name: Checkout code
@@ -42,7 +42,7 @@ jobs:
         if: steps.check.outputs.gemfile == 'true'
       - name: Chef Style
         if: steps.check.outputs.gemfile == 'true'
-        run: bundle exec chefstyle
+        run: bundle exec cookstyle --chefstyle
 
   yamllint:
     runs-on: ubuntu-latest

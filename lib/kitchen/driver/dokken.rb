@@ -475,7 +475,7 @@ module Kitchen
               next if v["auth"].nil?
 
               username, password = Base64.decode64(v["auth"]).split(":")
-              @docker_config_creds[k] = { serveraddress: k, username: username, password: password }
+              @docker_config_creds[k] = { serveraddress: k, username:, password: }
             end
           end
 
@@ -505,7 +505,8 @@ module Kitchen
           c = docker_config_creds[image_registry]
           c.respond_to?(:call) ? c.call : c
         elsif docker_config_creds.key?(default_registry)
-          docker_config_creds[default_registry]
+          c = docker_config_creds[default_registry]
+          c.respond_to?(:call) ? c.call : c
         end
       end
 
