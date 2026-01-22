@@ -77,3 +77,27 @@ jobs:
           use-verbose-mode: "yes"
           check-modified-files-only: "yes"
           base-branch: "main"
+
+  dokken:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - 3.4
+        os:
+          - almalinux-9
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GH_PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: false
+      - name: Setup Machine
+        run: |
+          bundle install
+      - name: Verify Dokken
+        run: bundle exec kitchen verify ${{ matrix.os }} -l debug
