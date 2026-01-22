@@ -1,9 +1,9 @@
 require "bundler/gem_tasks"
-require "chefstyle"
+require "cookstyle/chefstyle"
 require "rubocop/rake_task"
 
 RuboCop::RakeTask.new(:style) do |task|
-  task.options += ["--display-cop-names", "--no-color"]
+  task.options += ["--chefstyle", "--display-cop-names", "--no-color"]
 end
 
 task default: %i{style}
