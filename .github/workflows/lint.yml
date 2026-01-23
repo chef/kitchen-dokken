@@ -15,13 +15,12 @@ concurrency:
 
 jobs:
   cookstyle:
-    env:
-      BUNDLE_WITH: ${{ inputs.bundle_with }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.4"]
+        ruby:
+          - 3.4
     name: Cookstyle on Ruby
     steps:
       - name: Checkout code
