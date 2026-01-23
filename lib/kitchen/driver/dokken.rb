@@ -527,7 +527,7 @@ module Kitchen
       end
 
       def container_exist?(name)
-        return true if ::Docker::Container.get(name, {}, docker_connection)
+        true if ::Docker::Container.get(name, {}, docker_connection)
       rescue StandardError, ::Docker::Error::NotFoundError
         false
       end

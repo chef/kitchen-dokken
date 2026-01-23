@@ -45,7 +45,7 @@ jobs:
           bundler-cache: true
       - uses: r7kamura/rubocop-problem-matchers-action@v1
         if: steps.check.outputs.gemfile == 'true'
-      - name: Chef Style
+      - name: Cookstyle
         if: steps.check.outputs.gemfile == 'true'
         run: bundle exec cookstyle --chefstyle --display-cop-names
 
@@ -103,4 +103,4 @@ jobs:
         run: |
           bundle install
       - name: Verify Dokken
-        run: bundle exec kitchen verify ${{ matrix.os }} -l debug
+        run: bundle exec kitchen verify ${{ matrix.os }}
