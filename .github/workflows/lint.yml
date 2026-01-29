@@ -1,5 +1,7 @@
 ---
 name: lint
+permissions:
+  contents: read
 
 "on":
   pull_request:
@@ -12,18 +14,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  chefstyle:
-    env:
-      BUNDLE_WITH: ${{ inputs.bundle_with }}
+  cookstyle:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.3"]
-    name: Chefstyle on Ruby
+        ruby:
+          - 3.4
+    name: Cookstyle on Ruby
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Check for Gemfile
         id: check
         run: |
@@ -32,6 +33,9 @@ jobs:
           else
             echo "gemfile=false" >> $GITHUB_OUTPUT
           fi
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GH_PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Setup Ruby
         if: steps.check.outputs.gemfile == 'true'
         uses: ruby/setup-ruby@v1
@@ -40,15 +44,15 @@ jobs:
           bundler-cache: true
       - uses: r7kamura/rubocop-problem-matchers-action@v1
         if: steps.check.outputs.gemfile == 'true'
-      - name: Chef Style
+      - name: Cookstyle
         if: steps.check.outputs.gemfile == 'true'
-        run: bundle exec chefstyle
+        run: bundle exec cookstyle --chefstyle --display-cop-names
 
   yamllint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run yaml Lint
         uses: actionshub/yamllint@main
@@ -57,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v16
@@ -67,10 +71,35 @@ jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           check-modified-files-only: "yes"
           base-branch: "main"
+
+  dokken:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - 3.4
+        os:
+          - almalinux-9
+          - ubuntu-2404
+    steps:
+      - uses: actions/checkout@v6
+      - name: Configure Git for private repo access
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.GH_PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: false
+      - name: Setup Machine
+        run: |
+          bundle install
+      - name: Verify Dokken
+        run: bundle exec kitchen verify ${{ matrix.os }}

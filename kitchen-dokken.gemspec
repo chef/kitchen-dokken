@@ -19,4 +19,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "docker-api", ">= 1.33", "< 3"
   spec.add_dependency "lockfile", "~> 2.1"
+  spec.add_dependency "chef-test-kitchen-enterprise", ">= 1.0"
+  spec.add_dependency "kitchen-chef-enterprise", ">= 1.0"
 end
