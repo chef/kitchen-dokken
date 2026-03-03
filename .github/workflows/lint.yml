@@ -1,31 +1,75 @@
 ---
-name: "Lint, Unit & Integration Tests"
-
 "on":
-  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint-unit:
-    uses: test-kitchen/.github/.github/workflows/lint-unit.yml@main
-
-  integration:
+  cookstyle:
     runs-on: ubuntu-latest
-    needs: lint-unit
-    name: Kitchen Verify
     strategy:
+      fail-fast: false
       matrix:
-        ruby: ["3.1", "3.4"]
+        ruby: ["3.4"]
     steps:
-      - uses: actions/checkout@v6
-      - uses: ruby/setup-ruby@v1
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: TEST Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE
+        run: |
+          echo "Testing ORG Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:"
+          secret_value="${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
+          if [ -n "$secret_value" ]; then
+            echo "Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE is set."
+          else
+            echo "Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE is NOT set."
+          fi
+          if [ -n "${PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:-}" ]; then
+            echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Exists"
+            bundle config --local github.com "x-access-token:${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
+          else
+            echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Does Not Exist"
+          fi
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
-      - name: Create & Validate containers
-        run: |
-          bundle exec bundle exec kitchen create hello
-          bundle exec bundle exec kitchen test helloagain
-          bundle exec bundle exec kitchen destroy hello
-        env:
-          # This needs to be set for all phases, including the verify phase
-          CHEF_LICENSE: "accept"
+          bundler-cache: false
+      - name: Install cookstyle dependencies
+        run: gem install cookstyle
+      - uses: r7kamura/rubocop-problem-matchers-action@v1
+      - name: Cook Style
+        run: cookstyle --chefstyle --display-cop-names
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run yaml Lint
+        uses: actionshub/yamllint@main
+
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Markdown lint
+        uses: DavidAnson/markdownlint-cli2-action@v20
+        with:
+          globs: |
+            *.md
+            !CHANGELOG.md
+
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          check-modified-files-only: "yes"
+          base-branch: "main"
