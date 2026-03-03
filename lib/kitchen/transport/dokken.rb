@@ -39,7 +39,9 @@ module Kitchen
 
       plugin_version Kitchen::VERSION
 
-      default_config :docker_info, docker_info
+      default_config :docker_info do |transport|
+        docker_info(transport[:docker_host_url])
+      end
       default_config :docker_host_url, default_docker_host
       default_config :read_timeout, 3600
       default_config :write_timeout, 3600
@@ -164,12 +166,14 @@ module Kitchen
           rescue Errno::ENOENT
             debug "Rsync is not installed. Falling back to SCP."
             locals.each do |local|
-              Net::SCP.upload!(ssh_ip,
-                               "root",
-                               local,
-                               remote,
-                               recursive: true,
-                               ssh: { port: ssh_port, keys: ["#{tmpdir}/id_rsa"] })
+              Net::SCP.upload!(
+                ssh_ip,
+                "root",
+                local,
+                remote,
+                recursive: true,
+                ssh: { port: ssh_port, keys: ["#{tmpdir}/id_rsa"] }
+              )
               debug "Copied #{local} to #{remote}"
             end
           end
@@ -247,7 +251,7 @@ module Kitchen
       # Creates a new Dokken Connection instance and save it for potential future
       # reuse.
       #
-      # @param options [Hash] conneciton options
+      # @param options [Hash] connection options
       # @return [Ssh::Connection] an SSH Connection instance
       # @api private
       def create_new_connection(options, &block)

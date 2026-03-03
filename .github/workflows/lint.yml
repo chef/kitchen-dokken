@@ -1,73 +1,72 @@
 ---
-name: lint
-
 "on":
-  pull_request:
-  push:
-    branches:
-      - main
+  workflow_call:
+
+permissions:
+  contents: read
 
 concurrency:
   group: lint-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  chefstyle:
-    env:
-      BUNDLE_WITH: ${{ inputs.bundle_with }}
+  cookstyle:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["3.3"]
-    name: Chefstyle on Ruby
+        ruby: ["3.4"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Check for Gemfile
-        id: check
+        uses: actions/checkout@v6
+      - name: TEST Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE
         run: |
-          if [ -f Gemfile ]; then
-           echo "gemfile=true" >> $GITHUB_OUTPUT
+          echo "Testing ORG Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:"
+          secret_value="${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
+          if [ -n "$secret_value" ]; then
+            echo "Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE is set."
           else
-            echo "gemfile=false" >> $GITHUB_OUTPUT
+            echo "Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE is NOT set."
+          fi
+          if [ -n "${PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:-}" ]; then
+            echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Exists"
+            bundle config --local github.com "x-access-token:${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
+          else
+            echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Does Not Exist"
           fi
       - name: Setup Ruby
-        if: steps.check.outputs.gemfile == 'true'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
+          bundler-cache: false
+      - name: Install cookstyle dependencies
+        run: gem install cookstyle
       - uses: r7kamura/rubocop-problem-matchers-action@v1
-        if: steps.check.outputs.gemfile == 'true'
-      - name: Chef Style
-        if: steps.check.outputs.gemfile == 'true'
-        run: bundle exec chefstyle
-
+      - name: Cook Style
+        run: cookstyle --chefstyle --display-cop-names
   yamllint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v6
       - name: Run yaml Lint
         uses: actionshub/yamllint@main
 
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Markdown lint
-        uses: DavidAnson/markdownlint-cli2-action@v16
+        uses: DavidAnson/markdownlint-cli2-action@v20
         with:
-          globs: "**/*.md"
+          globs: |
+            *.md
+            !CHANGELOG.md
 
   markdown-link-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
         with:
           use-quiet-mode: "yes"

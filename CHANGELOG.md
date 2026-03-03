@@ -1,5 +1,81 @@
 # Dokken Changelog
 
+## [2.22.2](https://github.com/test-kitchen/kitchen-dokken/compare/v2.22.1...v2.22.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* Allow Ruby 3.1 ([#376](https://github.com/test-kitchen/kitchen-dokken/issues/376)) ([b66d934](https://github.com/test-kitchen/kitchen-dokken/commit/b66d934d63e83f36ab841b45f0988e6205e2c37a))
+
+## [2.22.1](https://github.com/test-kitchen/kitchen-dokken/compare/v2.22.0...v2.22.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* bump dep for tk4 support and add kitchen-omnibus-chef dep ([#374](https://github.com/test-kitchen/kitchen-dokken/issues/374)) ([0aed12d](https://github.com/test-kitchen/kitchen-dokken/commit/0aed12de9d24f80dabc59d907df7566730212753))
+
+## [2.22.0](https://github.com/test-kitchen/kitchen-dokken/compare/v2.21.4...v2.22.0) (2025-12-15)
+
+
+### Features
+
+* **ssh:** Add data_ssh_port configuration for fixed SSH port binding ([#362](https://github.com/test-kitchen/kitchen-dokken/issues/362)) ([03ed4cf](https://github.com/test-kitchen/kitchen-dokken/commit/03ed4cf8ef535f318f53decfa0c2b050335d7e81))
+
+## [2.21.4](https://github.com/test-kitchen/kitchen-dokken/compare/v2.21.3...v2.21.4) (2025-12-15)
+
+
+### Bug Fixes
+
+* Cmd must be a slice/array of strings for modern Docker ([#368](https://github.com/test-kitchen/kitchen-dokken/issues/368)) ([9e2e819](https://github.com/test-kitchen/kitchen-dokken/commit/9e2e8191e345e5108dd7f417dc9245ebf49aa0b8))
+
+## [2.21.3](https://github.com/test-kitchen/kitchen-dokken/compare/v2.21.2...v2.21.3) (2025-11-29)
+
+
+### Bug Fixes
+
+* fix SSH with with PAM ([#363](https://github.com/test-kitchen/kitchen-dokken/issues/363)) ([03f67eb](https://github.com/test-kitchen/kitchen-dokken/commit/03f67ebfb2e966d43bc34d5bea8d26adbab88113))
+
+## [2.21.2](https://github.com/test-kitchen/kitchen-dokken/compare/v2.21.1...v2.21.2) (2025-11-11)
+
+
+### Bug Fixes
+
+* **dns:** Fix DNS configuration ignored on custom Docker networks ([#359](https://github.com/test-kitchen/kitchen-dokken/issues/359)) ([ea7ccd4](https://github.com/test-kitchen/kitchen-dokken/commit/ea7ccd44edb2df687eece49094938f8adc8e5014))
+
+## [2.21.1](https://github.com/test-kitchen/kitchen-dokken/compare/v2.21.0...v2.21.1) (2025-11-03)
+
+
+### Bug Fixes
+
+* Use configured host URL when fetching docker information ([#321](https://github.com/test-kitchen/kitchen-dokken/issues/321)) ([#323](https://github.com/test-kitchen/kitchen-dokken/issues/323)) ([31e0468](https://github.com/test-kitchen/kitchen-dokken/commit/31e0468b7c7569c34abe366adf5e938f98e0e694))
+* Use JSON string of OCI platform instead of os/arch string ([#356](https://github.com/test-kitchen/kitchen-dokken/issues/356)) ([#357](https://github.com/test-kitchen/kitchen-dokken/issues/357)) ([e565b46](https://github.com/test-kitchen/kitchen-dokken/commit/e565b469ab5644fe6509d7bd3843b2d438dae584))
+
+## [2.21.0](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.8...v2.21.0) (2025-08-16)
+
+
+### Features
+
+* Require Ruby 3.2 or later + misc cleanup ([#353](https://github.com/test-kitchen/kitchen-dokken/issues/353)) ([64db987](https://github.com/test-kitchen/kitchen-dokken/commit/64db98739c2a972b14b20fccc64a79897561daf3))
+
+
+### Bug Fixes
+
+* Chef license ([#348](https://github.com/test-kitchen/kitchen-dokken/issues/348)) ([0b751c3](https://github.com/test-kitchen/kitchen-dokken/commit/0b751c334be5ff677a632be8d8623b63157ee0fb))
+
+## [2.20.8](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.7...v2.20.8) (2025-07-08)
+
+
+### Bug Fixes
+
+* provisioner root_path config option ([#345](https://github.com/test-kitchen/kitchen-dokken/issues/345)) ([843c639](https://github.com/test-kitchen/kitchen-dokken/commit/843c63917133df399f509461bbbf8cd5b8505ceb))
+
+## [2.20.7](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.6...v2.20.7) (2024-10-23)
+
+
+### Bug Fixes
+
+* Use default registry credentials when they are set ([#317](https://github.com/test-kitchen/kitchen-dokken/issues/317)) ([5e7f3e6](https://github.com/test-kitchen/kitchen-dokken/commit/5e7f3e65dad826114574844fe77710ea27a359e1))
+
 ## [2.20.6](https://github.com/test-kitchen/kitchen-dokken/compare/v2.20.5...v2.20.6) (2024-07-01)
 
 
@@ -235,7 +311,7 @@
 
 ## 2.4.3
 
-- Using better paths for lockfiles
+- Using better paths for lock files
 
 ## 2.4.2
 
@@ -340,7 +416,7 @@
 
 - Bind mounts data instead of uploading through kitchen-cache container when talking to a local Docker host. (most use cases)
 
-- Renders a Dockefile and builds dokken/kitchen-cache when talking to a remote Docker host. (DOCKER_HOST =~ /^tcp:/)
+- Renders a Dockerfile and builds dokken/kitchen-cache when talking to a remote Docker host. (DOCKER_HOST =~ /^tcp:/)
 
 ## 1.0.0
 
