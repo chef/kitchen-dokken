@@ -1,0 +1,60 @@
+---
+"on":
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHEF_LICENSE: accept-no-persist
+  CHEF_LICENSE_SERVER: http://hosted-license-service-lb-8000-606952349.us-west-2.elb.amazonaws.com:8000/
+  BUNDLE_GITHUB__COM: "x-access-token:${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}" # Needed for kitchen-chef-enterprise dependency
+
+jobs:
+  chef-client:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - 3.4
+        os:
+          - almalinux
+    env:
+      PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE: ${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: false
+          # token: ${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}
+      - name: Install dependencies
+        run: |
+
+          bundle install
+      - name: Verify Dokken
+        run: bundle exec kitchen verify ${{ matrix.os }}
+
+  docker-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - 3.4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Create & Validate containers
+        run: |
+          bundle exec bundle exec kitchen create hello
+          bundle exec bundle exec kitchen test helloagain
+          bundle exec bundle exec kitchen destroy hello
