@@ -38,11 +38,17 @@ suites:
     includes:
       - almalinux
     run_list:
-      - recipe[dokken_test::default]
       - recipe[test_cookbook::default]
     verifier:
       inspec_tests:
         - test/integration/default
+    attributes:
+
+  - name: dokken_test
+    includes:
+      - almalinux
+    run_list:
+      - recipe[dokken_test::default]
     attributes:
       dokken_test:
         revision: <%= `git rev-parse HEAD` %>
