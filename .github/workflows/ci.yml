@@ -73,6 +73,7 @@ jobs:
         with:
           ruby-version: 3.4
           bundler-cache: true
+          token: ${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}
   # lint:
   #   uses: ./.github/workflows/lint.yml
   #   secrets: inherit
