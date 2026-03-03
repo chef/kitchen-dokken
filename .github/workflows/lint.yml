@@ -19,21 +19,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      - name: TEST Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE
-        run: |
-          echo "Testing ORG Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:"
-          secret_value="${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
-          if [ -n "$secret_value" ]; then
-            echo "Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE is set."
-          else
-            echo "Secret PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE is NOT set."
-          fi
-          if [ -n "${PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:-}" ]; then
-            echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Exists"
-            bundle config --local github.com "x-access-token:${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
-          else
-            echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Does Not Exist"
-          fi
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -44,6 +29,7 @@ jobs:
       - uses: r7kamura/rubocop-problem-matchers-action@v1
       - name: Cook Style
         run: cookstyle --chefstyle --display-cop-names
+
   yamllint:
     runs-on: ubuntu-latest
     steps:
@@ -55,7 +41,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - name: Markdown lint
         uses: DavidAnson/markdownlint-cli2-action@v20
         with:
