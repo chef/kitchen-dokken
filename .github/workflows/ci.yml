@@ -35,7 +35,6 @@ jobs:
           if [ -n "${PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE:-}" ]; then
             echo
             echo "ENV VAR: PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE Exists"
-            bundle config --local github.com "x-access-token:${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}"
             env_exit_code=0
           else
             echo
