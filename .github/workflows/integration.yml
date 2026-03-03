@@ -31,12 +31,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: false
-          # token: ${{ secrets.PRIVATE_ACCESS_KITCHEN_CHEF_ENTERPRISE }}
-      - name: Install dependencies
-        run: |
-
-          bundle install
+          bundler-cache: true
       - name: Verify Dokken
         run: bundle exec kitchen verify ${{ matrix.os }}
 

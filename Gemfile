@@ -43,5 +43,5 @@ group :development do
 end
 
 group :cookstyle do
-  gem "cookstyle", "~> 8.4"
+  gem "cookstyle", ">= 8.4"
 end
