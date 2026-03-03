@@ -56,7 +56,6 @@ jobs:
           if [ -n "${GH_PRIVATE_REPO_TOKEN:-}" ]; then
             echo
             echo "ENV VAR: GH_PRIVATE_REPO_TOKEN Exists"
-            bundle config --local github.com "x-access-token:${{ secrets.GH_PRIVATE_REPO_TOKEN }}"
           else
             echo
             echo "ENV VAR: GH_PRIVATE_REPO_TOKEN Does Not Exist"
