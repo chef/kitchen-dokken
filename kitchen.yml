@@ -1,7 +1,7 @@
 ---
 driver:
   name: dokken
-  chef_version: latest
+  chef_version: 19.1.164 # TODO: switch back to latest once the docker hub tags are fixed for chef-hab
   privileged: true
   volumes: [ '/var/lib/docker' ]
   env: [CHEF_LICENSE=accept]
@@ -26,9 +26,9 @@ platforms:
     provisioner:
       chef_binary: /bin/true
 
-  - name: centos
+  - name: almalinux
     driver:
-      image: dokken/centos-7
+      image: dokken/almalinux-9
       pid_one_command: /usr/lib/systemd/systemd
       volumes:
         - <%= ENV['PWD'] %>/.git:/opt/kitchen-dokken/.git
@@ -36,7 +36,17 @@ platforms:
 suites:
   - name: default
     includes:
-      - centos
+      - almalinux
+    run_list:
+      - recipe[test_cookbook::default]
+    verifier:
+      inspec_tests:
+        - test/integration/default
+    attributes:
+
+  - name: dokken_test
+    includes:
+      - almalinux
     run_list:
       - recipe[dokken_test::default]
     attributes:
@@ -45,7 +55,7 @@ suites:
 
   - name: idempotency
     includes:
-      - centos
+      - almalinux
     provisioner:
       enforce_idempotency: true
       multiple_converge: 2
@@ -81,7 +91,7 @@ suites:
 
   - name: ipv6
     includes:
-      - centos
+      - almalinux
     driver:
       ipv6: true
 
@@ -92,3 +102,13 @@ suites:
   - name: host
     driver:
       network_mode: host
+
+  - name: dns
+    includes:
+      - almalinux
+    driver:
+      dns:
+        - 8.8.8.8
+        - 8.8.4.4
+      dns_search:
+        - example.com

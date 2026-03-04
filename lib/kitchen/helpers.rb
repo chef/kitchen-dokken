@@ -83,9 +83,9 @@ module Dokken
         RUN chmod 600  /root/.ssh/authorized_keys
 
         EXPOSE 22
-        CMD [ "/usr/sbin/sshd", "-D", "-p", "22", "-o", "UseDNS=no", "-o", "UsePrivilegeSeparation=no", "-o", "MaxAuthTries=60" ]
+        CMD [ "/usr/sbin/sshd", "-D", "-p", "22", "-o", "UseDNS=no", "-o", "MaxAuthTries=60", "-o", "UsePAM=no" ]
 
-        VOLUME /opt/kitchen
+        VOLUME #{resolved_root_path}
         VOLUME /opt/verifier
       EOF
     end
@@ -147,8 +147,8 @@ module Dokken
       end
     end
 
-    def docker_info
-      ::Docker.url = default_docker_host
+    def docker_info(docker_host)
+      ::Docker.url = docker_host
 
       @docker_info ||= ::Docker.info
     rescue Excon::Error::Socket
@@ -325,6 +325,10 @@ module Dokken
       unless ::Dir.exist?(sandbox_path)
         FileUtils.mkdir_p(sandbox_path, mode: 0o755)
       end
+    end
+
+    def resolved_root_path
+      instance.provisioner[:root_path] || "/opt/kitchen"
     end
   end
 end

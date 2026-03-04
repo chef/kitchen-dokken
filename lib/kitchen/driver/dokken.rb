@@ -42,10 +42,13 @@ module Kitchen
       default_config :chef_image, "chef/chef-hab"
       default_config :chef_version, "latest"
       default_config :data_image, "dokken/kitchen-cache:latest"
+      default_config :data_ssh_port, nil
       default_config :dns, nil
       default_config :dns_search, nil
       default_config :docker_host_url, default_docker_host
-      default_config :docker_info, docker_info
+      default_config :docker_info do |driver|
+        docker_info(driver[:docker_host_url])
+      end
       default_config :docker_registry, nil
       default_config :entrypoint, nil
       default_config :env, nil
@@ -130,6 +133,14 @@ module Kitchen
 
       private
 
+      def add_dns_config(endpoint_config)
+        return unless self[:dns] || self[:dns_search]
+
+        endpoint_config["DNSConfig"] = {}
+        endpoint_config["DNSConfig"]["Nameservers"] = self[:dns] if self[:dns]
+        endpoint_config["DNSConfig"]["Search"] = self[:dns_search] if self[:dns_search]
+      end
+
       class PartialHash < Hash
         def ==(other)
           other.is_a?(Hash) && all? { |key, val| other.key?(key) && other[key] == val }
@@ -148,9 +159,9 @@ module Kitchen
       end
 
       def delete_work_image
-        return unless ::Docker::Image.exist?(work_image, { "platform" => config[:platform] }, docker_connection)
+        return unless ::Docker::Image.exist?(work_image, { "platform" => oci_platform(config[:platform]) }, docker_connection)
 
-        with_retries { @work_image = ::Docker::Image.get(work_image, { "platform" => config[:platform] }, docker_connection) }
+        with_retries { @work_image = ::Docker::Image.get(work_image, { "platform" => oci_platform(config[:platform]) }, docker_connection) }
 
         with_retries do
           with_retries { @work_image.remove(force: true) }
@@ -161,7 +172,7 @@ module Kitchen
 
       def build_work_image(state)
         info("Building work image..")
-        return if ::Docker::Image.exist?(work_image, { "platform" => config[:platform] }, docker_connection)
+        return if ::Docker::Image.exist?(work_image, { "platform" => oci_platform(config[:platform]) }, docker_connection)
 
         begin
           @intermediate_image = ::Docker::Image.build(
@@ -297,7 +308,7 @@ module Kitchen
         volumes = coerce_volumes(volumes, binds)
 
         binds_ret = []
-        binds_ret << "#{dokken_kitchen_sandbox}:/opt/kitchen" unless dokken_kitchen_sandbox.nil? || remote_docker_host? || running_inside_docker?
+        binds_ret << "#{dokken_kitchen_sandbox}:#{resolved_root_path}" unless dokken_kitchen_sandbox.nil? || remote_docker_host? || running_inside_docker?
         binds_ret << "#{dokken_verifier_sandbox}:/opt/verifier" unless dokken_verifier_sandbox.nil? || remote_docker_host? || running_inside_docker?
         binds_ret << binds unless binds.nil?
 
@@ -335,11 +346,13 @@ module Kitchen
           },
         }
         unless %w{host bridge}.include?(self[:network_mode])
+          endpoint_config = {
+            "Aliases" => Array(self[:hostname]).concat(Array(self[:hostname_aliases])),
+          }
+          add_dns_config(endpoint_config)
           config["NetworkingConfig"] = {
             "EndpointsConfig" => {
-              self[:network_mode] => {
-                "Aliases" => Array(self[:hostname]).concat(Array(self[:hostname_aliases])),
-              },
+              self[:network_mode] => endpoint_config,
             },
           }
         end
@@ -372,17 +385,19 @@ module Kitchen
           # locally built image, must use short-name
           "Image" => short_image_path(data_image),
           "HostConfig" => {
-            "PortBindings" => port_bindings,
-            "PublishAllPorts" => true,
+            "PortBindings" => data_port_bindings,
+            "PublishAllPorts" => self[:data_ssh_port].nil?,
             "NetworkMode" => "bridge",
           },
         }
         unless %w{host bridge}.include?(self[:network_mode])
+          endpoint_config = {
+            "Aliases" => Array(self[:hostname]),
+          }
+          add_dns_config(endpoint_config)
           config["NetworkingConfig"] = {
             "EndpointsConfig" => {
-              self[:network_mode] => {
-                "Aliases" => Array(self[:hostname]),
-              },
+              self[:network_mode] => endpoint_config,
             },
           }
         end
@@ -432,7 +447,7 @@ module Kitchen
             debug "driver - creating volume container #{chef_container_name} from #{chef_image}"
             config = {
               "name" => chef_container_name,
-              "Cmd" => "true",
+              "Cmd" => ["true"],
               "Image" => registry_image_path(chef_image),
               "HostConfig" => {
                 "NetworkMode" => self[:network_mode],
@@ -475,7 +490,7 @@ module Kitchen
               next if v["auth"].nil?
 
               username, password = Base64.decode64(v["auth"]).split(":")
-              @docker_config_creds[k] = { serveraddress: k, username: username, password: password }
+              @docker_config_creds[k] = { serveraddress: k, username:, password: }
             end
           end
 
@@ -505,7 +520,8 @@ module Kitchen
           c = docker_config_creds[image_registry]
           c.respond_to?(:call) ? c.call : c
         elsif docker_config_creds.key?(default_registry)
-          docker_config_creds[default_registry]
+          c = docker_config_creds[default_registry]
+          c.respond_to?(:call) ? c.call : c
         end
       end
 
@@ -520,14 +536,14 @@ module Kitchen
       end
 
       def delete_image(name)
-        with_retries { @image = ::Docker::Image.get(name, { "platform" => config[:platform] }, docker_connection) }
+        with_retries { @image = ::Docker::Image.get(name, { "platform" => oci_platform(config[:platform]) }, docker_connection) }
         with_retries { @image.remove(force: true) }
       rescue ::Docker::Error
         puts "Image #{name} not found. Nothing to delete."
       end
 
       def container_exist?(name)
-        return true if ::Docker::Container.get(name, {}, docker_connection)
+        true if ::Docker::Container.get(name, {}, docker_connection)
       rescue StandardError, ::Docker::Error::NotFoundError
         false
       end
@@ -673,6 +689,27 @@ module Kitchen
         config[:data_image]
       end
 
+      def data_port_bindings
+        return port_bindings unless config[:data_ssh_port]
+
+        # If data_ssh_port is specified, use it for SSH port mapping
+        ssh_port_binding = {
+          "22/tcp" => [
+            {
+              "HostIp" => "0.0.0.0",
+              "HostPort" => config[:data_ssh_port].to_s,
+            },
+          ],
+        }
+
+        # Merge with any existing port bindings
+        if port_bindings
+          port_bindings.merge(ssh_port_binding)
+        else
+          ssh_port_binding
+        end
+      end
+
       def platform_image
         config[:image] || platform_image_from_name
       end
@@ -683,7 +720,7 @@ module Kitchen
       end
 
       def pull_if_missing(image)
-        return if ::Docker::Image.exist?(registry_image_path(image), { "platform" => config[:platform] }, docker_connection)
+        return if ::Docker::Image.exist?(registry_image_path(image), { "platform" => oci_platform(config[:platform]) }, docker_connection)
 
         pull_image image
       end
@@ -696,14 +733,22 @@ module Kitchen
       def pull_image(image)
         path = registry_image_path(image)
         with_retries do
-          if Docker::Image.exist?(path, { "platform" => config[:platform] }, docker_connection)
-            original_image = Docker::Image.get(path, { "platform" => config[:platform] }, docker_connection)
+          if Docker::Image.exist?(path, { "platform" => oci_platform(config[:platform]) }, docker_connection)
+            original_image = Docker::Image.get(path, { "platform" => oci_platform(config[:platform]) }, docker_connection)
           end
 
           new_image = Docker::Image.create({ "fromImage" => path, "platform" => config[:platform] }, docker_creds_for_image(image), docker_connection)
 
           !(original_image&.id&.start_with?(new_image.id))
         end
+      end
+
+      def oci_platform(platform)
+        if !platform.nil? && platform.include?("/")
+          os, arch = platform.split("/")
+          platform = { os: os, architecture: arch }.to_json
+        end
+        platform
       end
 
       def runner_container_name
