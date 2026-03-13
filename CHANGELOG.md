@@ -1,6 +1,14 @@
 # Dokken Changelog
 
+<!-- latest_release -->
+<!-- latest_release -->
+
+<!-- release_rollup -->
+<!-- release_rollup -->
+
+<!-- latest_stable_release -->
 ## [2.22.2](https://github.com/test-kitchen/kitchen-dokken/compare/v2.22.1...v2.22.2) (2026-02-13)
+<!-- latest_stable_release -->
 
 
 ### Bug Fixes
