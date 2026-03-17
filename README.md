@@ -717,5 +717,6 @@ docker push my.computers.biz:5043/something/whatever
 kitchen destroy
 ```
 
-# Copyright
+## Copyright
+
 See [COPYRIGHT.md](./COPYRIGHT.md).
