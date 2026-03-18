@@ -730,3 +730,7 @@ docker tag suite_name:latest my.computers.biz:5043/something/whatever
 docker push my.computers.biz:5043/something/whatever
 kitchen destroy
 ```
+
+## Copyright
+
+See [COPYRIGHT.md](./COPYRIGHT.md).
