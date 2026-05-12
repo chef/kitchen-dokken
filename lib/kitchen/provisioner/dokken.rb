@@ -133,7 +133,8 @@ module Kitchen
       def chef_executable
         return  "#{config[:chef_binary]}" if instance.driver.installer == "chef"
 
-        hab_bin = "HAB_BIN=$(find /hab/pkgs/core/hab/ -type f -name hab | sort | tail -n1)"
+        # Search both chef/hab and core/hab origins since hab moved from core to chef origin
+        hab_bin = "HAB_BIN=$(find /hab/pkgs/chef/hab/ /hab/pkgs/core/hab/ -type f -name hab 2>/dev/null | sort | tail -n1)"
         "#{hab_bin} && HAB_LICENSE='accept-no-persist'  \"$HAB_BIN\" pkg exec chef/chef-infra-client -- chef-client "
       end
 
